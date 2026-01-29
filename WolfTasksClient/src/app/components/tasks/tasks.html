@@ -1,0 +1,405 @@
+<!-- TasksComponent Template - לוח משימות Kanban -->
+<div class="tasks-container">
+  <!-- Header -->
+  <header class="tasks-header">
+    <div class="header-content">
+      <div class="header-title">
+        <button class="btn-back" (click)="goBackToProjects()" title="חזרה לפרויקטים">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <div>
+          <h1>{{ project()?.name }}</h1>
+          @if (project()?.description) {
+            <p class="subtitle">{{ project()?.description }}</p>
+          }
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" (click)="openCreateForm()">
+          + משימה חדשה
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Task Form Modal -->
+  @if (showTaskForm()) {
+    <div class="modal-overlay" (click)="closeTaskForm()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ isEditMode() ? 'עריכת משימה' : 'משימה חדשה' }}</h2>
+          <button class="btn-close" (click)="closeTaskForm()">×</button>
+        </div>
+        
+        <form #taskFormEl="ngForm" (ngSubmit)="onSaveTask()" class="task-form">
+          <div class="form-group">
+            <label for="title">כותרת המשימה: *</label>
+            <input 
+              type="text" 
+              id="title" 
+              name="title"
+              [(ngModel)]="newTask.title"
+              #titleInput="ngModel"
+              required
+              minlength="3"
+              placeholder="הזן כותרת למשימה"
+              [class.error]="titleInput.invalid && titleInput.touched"
+            >
+            @if (titleInput.invalid && titleInput.touched) {
+              <div class="error-message">
+                @if (titleInput.errors?.['required']) {
+                  <span>כותרת המשימה היא שדה חובה</span>
+                }
+                @if (titleInput.errors?.['minlength']) {
+                  <span>כותרת המשימה חייבת להכיל לפחות 3 תווים</span>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="description">תיאור:</label>
+            <textarea 
+              id="description" 
+              name="description"
+              [(ngModel)]="newTask.description"
+              placeholder="הזן תיאור למשימה"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="status">סטטוס: *</label>
+              <select id="status" name="status" [(ngModel)]="newTask.status" required>
+                <option [value]="TaskStatus.TODO">TODO</option>
+                <option [value]="TaskStatus.IN_PROGRESS">IN PROGRESS</option>
+                <option [value]="TaskStatus.DONE">DONE</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="priority">עדיפות: *</label>
+              <select id="priority" name="priority" [(ngModel)]="newTask.priority" required>
+                <option [value]="TaskPriority.LOW">נמוכה</option>
+                <option [value]="TaskPriority.NORMAL">רגילה</option>
+                <option [value]="TaskPriority.HIGH">גבוהה</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="dueDate">תאריך יעד:</label>
+            <input type="date" id="dueDate" name="dueDate" [(ngModel)]="newTask.dueDate">
+          </div>
+
+          <div class="form-group">
+            <label for="assignedTo">משויך ל:</label>
+            <select id="assignedTo" name="assignedTo" [(ngModel)]="newTask.assignedTo">
+              <option [value]="0">לא משויך</option>
+              @for (member of teamMembers(); track member.id) {
+                <option [value]="member.id">{{ member.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="taskFormEl.invalid || loading()">
+              {{ loading() ? 'שומר...' : (isEditMode() ? 'עדכן משימה' : 'צור משימה') }}
+            </button>
+            <button type="button" class="btn-secondary" (click)="closeTaskForm()">
+              ביטול
+            </button>
+          </div>
+
+          @if (errorMessage()) {
+            <div class="error-message">
+              {{ errorMessage() }}
+            </div>
+          }
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (loading() && !showTaskForm()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>טוען משימות...</p>
+    </div>
+  }
+
+  <!-- Error Banner -->
+  @if (errorMessage() && !showTaskForm()) {
+    <div class="error-banner">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Kanban Board -->
+  @if (!loading()) {
+    <div class="kanban-board">
+      <!-- TODO Column -->
+      <div class="kanban-column">
+        <div class="column-header todo-header">
+          <h3>TODO</h3>
+          <span class="task-count">{{ todoTasks().length }}</span>
+        </div>
+        <div class="column-content">
+          @for (task of todoTasks(); track task.id) {
+            <div class="task-card" [class]="getPriorityClass(task.priority)">
+              <div class="task-card-header">
+                <h4>{{ task.title }}</h4>
+                <div class="task-actions">
+                  <button class="btn-icon btn-comments" (click)="openCommentsModal(task)" title="תגובות">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                  </button>
+                  <button class="btn-icon" (click)="openEditForm(task)" title="ערוך">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button class="btn-icon btn-delete" (click)="onDeleteTask(task.id)" title="מחק">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              @if (task.description) {
+                <p class="task-description">{{ task.description }}</p>
+              }
+              <p class="task-assigned">
+                <span class="assigned-icon">👤</span>
+                <span>{{ getUserName(task.assignedTo) }}</span>
+              </p>
+              <div class="task-meta">
+                <span class="priority-badge" [class]="getPriorityClass(task.priority)">
+                  {{ task.priority }}
+                </span>
+                @if (task.dueDate) {
+                  <span class="due-date">
+                    📅 {{ task.dueDate | date:'dd/MM/yyyy' }}
+                  </span>
+                }
+              </div>
+              <div class="task-move-actions">
+                <button class="btn-move" (click)="onChangeStatus(task, TaskStatus.IN_PROGRESS)">
+                  → IN PROGRESS
+                </button>
+              </div>
+            </div>
+          }
+          @if (todoTasks().length === 0) {
+            <div class="empty-column">
+              <p>אין משימות</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- IN PROGRESS Column -->
+      <div class="kanban-column">
+        <div class="column-header progress-header">
+          <h3>IN PROGRESS</h3>
+          <span class="task-count">{{ inProgressTasks().length }}</span>
+        </div>
+        <div class="column-content">
+          @for (task of inProgressTasks(); track task.id) {
+            <div class="task-card" [class]="getPriorityClass(task.priority)">
+              <div class="task-card-header">
+                <h4>{{ task.title }}</h4>
+                <div class="task-actions">
+                  <button class="btn-icon btn-comments" (click)="openCommentsModal(task)" title="תגובות">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                  </button>
+                  <button class="btn-icon" (click)="openEditForm(task)" title="ערוך">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button class="btn-icon btn-delete" (click)="onDeleteTask(task.id)" title="מחק">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              @if (task.description) {
+                <p class="task-description">{{ task.description }}</p>
+              }
+              <p class="task-assigned">
+                <span class="assigned-icon">👤</span>
+                <span>{{ getUserName(task.assignedTo) }}</span>
+              </p>
+              <div class="task-meta">
+                <span class="priority-badge" [class]="getPriorityClass(task.priority)">
+                  {{ task.priority }}
+                </span>
+                @if (task.dueDate) {
+                  <span class="due-date">
+                    📅 {{ task.dueDate | date:'dd/MM/yyyy' }}
+                  </span>
+                }
+              </div>
+              <div class="task-move-actions">
+                <button class="btn-move" (click)="onChangeStatus(task, TaskStatus.TODO)">
+                  ← TODO
+                </button>
+                <button class="btn-move" (click)="onChangeStatus(task, TaskStatus.DONE)">
+                  DONE →
+                </button>
+              </div>
+            </div>
+          }
+          @if (inProgressTasks().length === 0) {
+            <div class="empty-column">
+              <p>אין משימות</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- DONE Column -->
+      <div class="kanban-column">
+        <div class="column-header done-header">
+          <h3>DONE</h3>
+          <span class="task-count">{{ doneTasks().length }}</span>
+        </div>
+        <div class="column-content">
+          @for (task of doneTasks(); track task.id) {
+            <div class="task-card" [class]="getPriorityClass(task.priority)">
+              <div class="task-card-header">
+                <h4>{{ task.title }}</h4>
+                <div class="task-actions">
+                  <button class="btn-icon btn-comments" (click)="openCommentsModal(task)" title="תגובות">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                  </button>
+                  <button class="btn-icon" (click)="openEditForm(task)" title="ערוך">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button class="btn-icon btn-delete" (click)="onDeleteTask(task.id)" title="מחק">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              @if (task.description) {
+                <p class="task-description">{{ task.description }}</p>
+              }
+              <p class="task-assigned">
+                <span class="assigned-icon">👤</span>
+                <span>{{ getUserName(task.assignedTo) }}</span>
+              </p>
+              <div class="task-meta">
+                <span class="priority-badge" [class]="getPriorityClass(task.priority)">
+                  {{ task.priority }}
+                </span>
+                @if (task.dueDate) {
+                  <span class="due-date">
+                    📅 {{ task.dueDate | date:'dd/MM/yyyy' }}
+                  </span>
+                }
+              </div>
+              <div class="task-move-actions">
+                <button class="btn-move" (click)="onChangeStatus(task, TaskStatus.IN_PROGRESS)">
+                  ← IN PROGRESS
+                </button>
+              </div>
+            </div>
+          }
+          @if (doneTasks().length === 0) {
+            <div class="empty-column">
+              <p>אין משימות</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Comments Modal - מודל תגובות -->
+@if (showCommentsModal()) {
+  <div class="modal-overlay" (click)="closeCommentsModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>תגובות - {{ selectedTask()?.title }}</h2>
+        <button class="btn-close" (click)="closeCommentsModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- רשימת תגובות -->
+        <div class="comments-list">
+          @if (loadingComments()) {
+            <div class="loading-comments">
+              <div class="spinner"></div>
+              <p>טוען תגובות...</p>
+            </div>
+          } @else if (comments().length === 0) {
+            <div class="no-comments">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <p>אין תגובות עדיין</p>
+              <small>היה הראשון להגיב!</small>
+            </div>
+          } @else {
+            @for (comment of comments(); track comment.id) {
+              <div class="comment-item">
+                <div class="comment-header">
+                  <span class="comment-author">{{ comment.userName || 'משתמש' }}</span>
+                  <span class="comment-date">{{ comment.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                <div class="comment-body">
+                  {{ comment.body }}
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- טופס הוספת תגובה -->
+        <div class="add-comment-form">
+          <h3>הוסף תגובה</h3>
+          <textarea 
+            [(ngModel)]="newCommentBody"
+            placeholder="כתוב תגובה..."
+            rows="3"
+            [disabled]="loadingComments()"
+          ></textarea>
+          <button 
+            class="btn-primary" 
+            (click)="addComment()"
+            [disabled]="!newCommentBody.trim() || loadingComments()"
+          >
+            {{ loadingComments() ? 'שולח...' : 'שלח תגובה' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

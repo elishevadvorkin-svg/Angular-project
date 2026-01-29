@@ -1,0 +1,203 @@
+<!-- TeamsComponent Template - מסך ניהול צוותים -->
+<div class="teams-container">
+  <!-- Header - כותרת ראשית -->
+  <header class="teams-header">
+    <div class="header-content">
+      <h1>הצוותים שלי</h1>
+      <div class="header-actions">
+        <button class="btn-primary" (click)="toggleCreateForm()">
+          {{ showCreateForm() ? 'ביטול' : '+ צוות חדש' }}
+        </button>
+        <button class="btn-secondary" (click)="logout()">התנתק</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Create Team Form - טופס יצירת צוות חדש -->
+  @if (showCreateForm()) {
+    <div class="create-form-wrapper">
+      <form #teamForm="ngForm" (ngSubmit)="onCreateTeam()" class="create-form">
+        <h3>יצירת צוות חדש</h3>
+        
+        <div class="form-group">
+          <label for="teamName">שם הצוות:</label>
+          <input 
+            type="text" 
+            id="teamName" 
+            name="teamName"
+            [(ngModel)]="newTeamName"
+            #nameInput="ngModel"
+            required
+            minlength="2"
+            placeholder="הזן שם לצוות"
+            [class.error]="nameInput.invalid && nameInput.touched"
+          >
+          @if (nameInput.invalid && nameInput.touched) {
+            <div class="error-message">
+              @if (nameInput.errors?.['required']) {
+                <span>שם הצוות הוא שדה חובה</span>
+              }
+              @if (nameInput.errors?.['minlength']) {
+                <span>שם הצוות חייב להכיל לפחות 2 תווים</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="teamForm.invalid || loading()">
+            {{ loading() ? 'יוצר...' : 'צור צוות' }}
+          </button>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="error-message">
+            {{ errorMessage() }}
+          </div>
+        }
+      </form>
+    </div>
+  }
+
+  <!-- Loading Spinner - אנימציית טעינה -->
+  @if (loading() && !showCreateForm()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>טוען צוותים...</p>
+    </div>
+  }
+
+  <!-- Error Message - הודעת שגיאה -->
+  @if (errorMessage() && !showCreateForm()) {
+    <div class="error-banner">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Teams List - רשימת הצוותים -->
+  @if (!loading()) {
+    <div class="teams-grid">
+      <!-- Empty State - אין צוותים -->
+      @if (teams().length === 0) {
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <h2>אין לך צוותים עדיין</h2>
+          <p>צור את הצוות הראשון שלך כדי להתחיל!</p>
+          <button class="btn-primary" (click)="toggleCreateForm()">+ צור צוות</button>
+        </div>
+      }
+
+      <!-- Team Cards - כרטיסי צוותים -->
+      @for (team of teams(); track team.id) {
+        <div class="team-card">
+          <div class="team-card-header">
+            <h3>{{ team.name }}</h3>
+            <button class="btn-delete" (click)="onDeleteTeam(team.id)" title="מחק צוות">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="team-card-body">
+            <div class="team-info">
+              <div class="info-item">
+                <span class="label">חברים:</span>
+                <span class="value">{{ team.memberCount || 0 }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">נוצר:</span>
+                <span class="value">{{ team.createdAt | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="team-card-footer">
+            <button class="btn-view" (click)="viewProjects(team.id)">
+              צפה בפרויקטים →
+            </button>
+            <button class="btn-secondary" (click)="openAddMemberModal(team)">
+              👥 נהל חברים
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal - הוספת חברים -->
+@if (showAddMemberModal()) {
+  <div class="modal-overlay" (click)="closeAddMemberModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>ניהול חברי צוות - {{ selectedTeam()?.name }}</h2>
+        <button class="btn-close" (click)="closeAddMemberModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- רשימת חברים נוכחיים -->
+        <div class="section">
+          <h3>חברי הצוות ({{ teamMembers().length }})</h3>
+          @if (teamMembers().length === 0) {
+            <p class="no-members">אין חברים בצוות עדיין</p>
+          } @else {
+            <div class="members-list">
+              @for (member of teamMembers(); track member.id) {
+                <div class="member-item">
+                  <span class="member-name">
+                    {{ member.name }}
+                    @if (isTeamOwner(member.id)) {
+                      <span class="owner-badge">👑 ראש צוות</span>
+                    }
+                  </span>
+                  @if (!isTeamOwner(member.id)) {
+                    <button 
+                      class="btn-remove" 
+                      (click)="removeMemberFromTeam(member.id)"
+                      title="הסר מהצוות">
+                      ✕
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- הוספת חבר חדש -->
+        <div class="section">
+          <h3>הוסף חבר חדש</h3>
+          <div class="add-member-form">
+            <select [(ngModel)]="selectedUserId" class="user-select">
+              <option value="0">בחר משתמש...</option>
+              @for (user of allUsers(); track user.id) {
+                @if (!isUserInTeam(user.id)) {
+                  <option [value]="user.id">{{ user.name }}</option>
+                }
+              }
+            </select>
+            <button 
+              class="btn-primary" 
+              (click)="addMember()"
+              [disabled]="!selectedUserId || selectedUserId === 0">
+              הוסף
+            </button>
+          </div>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="error-message">
+            {{ errorMessage() }}
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

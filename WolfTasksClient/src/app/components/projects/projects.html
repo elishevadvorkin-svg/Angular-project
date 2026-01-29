@@ -1,0 +1,228 @@
+<!-- ProjectsComponent Template - מסך ניהול פרויקטים -->
+<div class="projects-container">
+  <!-- Header - כותרת ראשית -->
+  <header class="projects-header">
+    <div class="header-content">
+      <div class="header-title">
+        <button class="btn-back" (click)="goBackToTeams()" title="חזרה לצוותים">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <div>
+          <h1>פרויקטים - {{ team()?.name }}</h1>
+          @if (team()) {
+            <p class="subtitle">ניהול הפרויקטים של הצוות</p>
+          }
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" (click)="toggleCreateForm()">
+          {{ showCreateForm() ? 'ביטול' : '+ פרויקט חדש' }}
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Create Project Form - טופס יצירת פרויקט חדש -->
+  @if (showCreateForm()) {
+    <div class="create-form-wrapper">
+      <form #projectForm="ngForm" (ngSubmit)="onCreateProject()" class="create-form">
+        <h3>יצירת פרויקט חדש</h3>
+        
+        <div class="form-group">
+          <label for="projectName">שם הפרויקט:</label>
+          <input 
+            type="text" 
+            id="projectName" 
+            name="projectName"
+            [(ngModel)]="newProject.name"
+            #nameInput="ngModel"
+            required
+            minlength="2"
+            placeholder="הזן שם לפרויקט"
+            [class.error]="nameInput.invalid && nameInput.touched"
+          >
+          @if (nameInput.invalid && nameInput.touched) {
+            <div class="error-message">
+              @if (nameInput.errors?.['required']) {
+                <span>שם הפרויקט הוא שדה חובה</span>
+              }
+              @if (nameInput.errors?.['minlength']) {
+                <span>שם הפרויקט חייב להכיל לפחות 2 תווים</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="projectDescription">תיאור (אופציונלי):</label>
+          <textarea 
+            id="projectDescription" 
+            name="projectDescription"
+            [(ngModel)]="newProject.description"
+            placeholder="הזן תיאור לפרויקט"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="projectForm.invalid || loading()">
+            {{ loading() ? 'יוצר...' : 'צור פרויקט' }}
+          </button>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="error-message">
+            {{ errorMessage() }}
+          </div>
+        }
+      </form>
+    </div>
+  }
+
+  <!-- Edit Project Form - טופס עריכת פרויקט -->
+  @if (showEditForm()) {
+    <div class="create-form-wrapper">
+      <form #editForm="ngForm" (ngSubmit)="onSaveEdit()" class="create-form">
+        <h3>עריכת פרויקט</h3>
+        
+        <div class="form-group">
+          <label for="editProjectName">שם הפרויקט:</label>
+          <input 
+            type="text" 
+            id="editProjectName" 
+            name="editProjectName"
+            [(ngModel)]="editProject.name"
+            #editNameInput="ngModel"
+            required
+            minlength="2"
+            placeholder="הזן שם לפרויקט"
+            [class.error]="editNameInput.invalid && editNameInput.touched"
+          >
+          @if (editNameInput.invalid && editNameInput.touched) {
+            <div class="error-message">
+              @if (editNameInput.errors?.['required']) {
+                <span>שם הפרויקט הוא שדה חובה</span>
+              }
+              @if (editNameInput.errors?.['minlength']) {
+                <span>שם הפרויקט חייב להכיל לפחות 2 תווים</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="editProjectDescription">תיאור (אופציונלי):</label>
+          <textarea 
+            id="editProjectDescription" 
+            name="editProjectDescription"
+            [(ngModel)]="editProject.description"
+            placeholder="הזן תיאור לפרויקט"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="editForm.invalid || loading()">
+            {{ loading() ? 'שומר...' : 'שמור שינויים' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="onCancelEdit()">
+            ביטול
+          </button>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="error-message">
+            {{ errorMessage() }}
+          </div>
+        }
+      </form>
+    </div>
+  }
+
+  <!-- Loading Spinner - אנימציית טעינה -->
+  @if (loading() && !showCreateForm()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>טוען פרויקטים...</p>
+    </div>
+  }
+
+  <!-- Error Message - הודעת שגיאה -->
+  @if (errorMessage() && !showCreateForm()) {
+    <div class="error-banner">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Projects List - רשימת הפרויקטים -->
+  @if (!loading()) {
+    <div class="projects-grid">
+      <!-- Empty State - אין פרויקטים -->
+      @if (projects().length === 0) {
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <h2>אין פרויקטים עדיין</h2>
+          <p>צור את הפרויקט הראשון שלך כדי להתחיל!</p>
+          <button class="btn-primary" (click)="toggleCreateForm()">+ צור פרויקט</button>
+        </div>
+      }
+
+      <!-- Project Cards - כרטיסי פרויקטים -->
+      @for (project of projects(); track project.id) {
+        <div class="project-card">
+          <div class="project-card-header">
+            <h3>{{ project.name }}</h3>
+            <div class="card-actions">
+              <button class="btn-edit" (click)="onEditProject(project)" title="ערוך פרויקט">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+              <button class="btn-delete" (click)="onDeleteProject(project.id)" title="מחק פרויקט">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="project-card-body">
+            @if (project.description) {
+              <p class="project-description">
+                {{ project.description }}
+              </p>
+            } @else {
+              <p class="project-description empty">
+                אין תיאור לפרויקט זה
+              </p>
+            }
+
+            <div class="project-info">
+              <div class="info-item">
+                <span class="label">משימות:</span>
+                <span class="value">{{ project.taskCount || 0 }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">נוצר:</span>
+                <span class="value">{{ project.createdAt | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="project-card-footer">
+            <button class="btn-view" (click)="viewTasks(project.id)">
+              צפה במשימות →
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

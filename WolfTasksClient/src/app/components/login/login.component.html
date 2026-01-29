@@ -1,0 +1,188 @@
+<!-- מסך התחברות/הרשמה -->
+<div class="login-container">
+  <div class="login-card">
+    
+    <!-- כותרת -->
+    <h1>{{ isLoginMode() ? 'התחברות' : 'הרשמה' }}</h1>
+    
+    <!-- הודעת שגיאה -->
+    @if (errorMessage()) {
+      <div class="error-message">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- טופס התחברות -->
+    @if (isLoginMode()) {
+      <form #loginForm="ngForm" (ngSubmit)="onLogin()">
+        
+        <!-- שדה אימייל -->
+        <div class="form-group">
+          <label for="login-email">אימייל</label>
+          <input 
+            id="login-email"
+            type="email" 
+            name="email"
+            [(ngModel)]="loginData.email"
+            #loginEmail="ngModel"
+            required
+            email
+            placeholder="your@email.com"
+            [class.invalid]="loginEmail.invalid && loginEmail.touched"
+          >
+          <!-- הודעת שגיאה לאימייל -->
+          @if (loginEmail.invalid && loginEmail.touched) {
+            <div class="field-error">
+              @if (loginEmail.errors?.['required']) {
+                <span>אימייל הוא שדה חובה</span>
+              }
+              @if (loginEmail.errors?.['email']) {
+                <span>פורמט אימייל לא תקין</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- שדה סיסמה -->
+        <div class="form-group">
+          <label for="login-password">סיסמה</label>
+          <input 
+            id="login-password"
+            type="password" 
+            name="password"
+            [(ngModel)]="loginData.password"
+            #loginPassword="ngModel"
+            required
+            minlength="6"
+            placeholder="סיסמה"
+            [class.invalid]="loginPassword.invalid && loginPassword.touched"
+          >
+          <!-- הודעת שגיאה לסיסמה -->
+          @if (loginPassword.invalid && loginPassword.touched) {
+            <div class="field-error">
+              @if (loginPassword.errors?.['required']) {
+                <span>סיסמה היא שדה חובה</span>
+              }
+              @if (loginPassword.errors?.['minlength']) {
+                <span>סיסמה חייבת להכיל לפחות 6 תווים</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- כפתור התחברות -->
+        <button 
+          type="submit" 
+          class="btn-primary"
+          [disabled]="loginForm.invalid || loading()"
+        >
+          {{ loading() ? 'מתחבר...' : 'התחבר' }}
+        </button>
+      </form>
+    }
+
+    <!-- טופס הרשמה -->
+    @if (!isLoginMode()) {
+      <form #registerForm="ngForm" (ngSubmit)="onRegister()">
+        
+        <!-- שדה שם -->
+        <div class="form-group">
+          <label for="register-name">שם מלא</label>
+          <input 
+            id="register-name"
+            type="text" 
+            name="name"
+            [(ngModel)]="registerData.name"
+            #registerName="ngModel"
+            required
+            minlength="2"
+            placeholder="שם מלא"
+            [class.invalid]="registerName.invalid && registerName.touched"
+          >
+          <!-- הודעת שגיאה לשם -->
+          @if (registerName.invalid && registerName.touched) {
+            <div class="field-error">
+              @if (registerName.errors?.['required']) {
+                <span>שם הוא שדה חובה</span>
+              }
+              @if (registerName.errors?.['minlength']) {
+                <span>שם חייב להכיל לפחות 2 תווים</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- שדה אימייל -->
+        <div class="form-group">
+          <label for="register-email">אימייל</label>
+          <input 
+            id="register-email"
+            type="email" 
+            name="email"
+            [(ngModel)]="registerData.email"
+            #registerEmail="ngModel"
+            required
+            email
+            placeholder="your@email.com"
+            [class.invalid]="registerEmail.invalid && registerEmail.touched"
+          >
+          <!-- הודעת שגיאה לאימייל -->
+          @if (registerEmail.invalid && registerEmail.touched) {
+            <div class="field-error">
+              @if (registerEmail.errors?.['required']) {
+                <span>אימייל הוא שדה חובה</span>
+              }
+              @if (registerEmail.errors?.['email']) {
+                <span>פורמט אימייל לא תקין</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- שדה סיסמה -->
+        <div class="form-group">
+          <label for="register-password">סיסמה</label>
+          <input 
+            id="register-password"
+            type="password" 
+            name="password"
+            [(ngModel)]="registerData.password"
+            #registerPassword="ngModel"
+            required
+            minlength="6"
+            placeholder="סיסמה (לפחות 6 תווים)"
+            [class.invalid]="registerPassword.invalid && registerPassword.touched"
+          >
+          <!-- הודעת שגיאה לסיסמה -->
+          @if (registerPassword.invalid && registerPassword.touched) {
+            <div class="field-error">
+              @if (registerPassword.errors?.['required']) {
+                <span>סיסמה היא שדה חובה</span>
+              }
+              @if (registerPassword.errors?.['minlength']) {
+                <span>סיסמה חייבת להכיל לפחות 6 תווים</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- כפתור הרשמה -->
+        <button 
+          type="submit" 
+          class="btn-primary"
+          [disabled]="registerForm.invalid || loading()"
+        >
+          {{ loading() ? 'נרשם...' : 'הרשם' }}
+        </button>
+      </form>
+    }
+
+    <!-- כפתור להחלפת מצב -->
+    <div class="switch-mode">
+      <button type="button" class="btn-link" (click)="switchMode()">
+        {{ isLoginMode() ? 'אין לך חשבון? הירשם' : 'יש לך חשבון? התחבר' }}
+      </button>
+    </div>
+
+  </div>
+</div>
