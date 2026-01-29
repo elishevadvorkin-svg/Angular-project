@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { listTeams, createTeam, addMember, deleteTeam, listTeamMembers, removeMember } from '../controllers/teams.controller.js';
+import { createTeam, addMember, deleteTeam, listTeamMembers, removeMember, listTeamsMembers } from '../controllers/teams.controller.js';
 
 const router = Router();
 
 router.use(requireAuth);
 
-router.get('/', listTeams);
+router.get('/', listTeamsMembers);
 
 router.post('/', createTeam);
 

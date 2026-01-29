@@ -1,6 +1,6 @@
 import db from '../db.js';
 
-export function listTeams(req, res) {
+export function listTeamsMembers(req, res) {
   const teams = db
     .prepare(
       `SELECT t.*, (
