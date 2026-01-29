@@ -18,7 +18,7 @@ import { Comment, CreateCommentRequest } from '../models';
 })
 export class CommentsService {
   // כתובת ה-API בשרת
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = 'https://angular-project-4qdz.onrender.com/api';
 
   // Dependency Injection עם inject()
   private http = inject(HttpClient);

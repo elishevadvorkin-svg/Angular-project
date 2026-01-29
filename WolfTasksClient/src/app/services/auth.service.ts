@@ -18,7 +18,7 @@ import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models';
 })
 export class AuthService {
   // כתובת ה-API של השרת
-  private apiUrl = 'http://localhost:3000/api/auth';
+  private apiUrl = 'https://angular-project-4qdz.onrender.com/api/auth';
 
   // Dependency Injection עם inject()
   private http = inject(HttpClient);

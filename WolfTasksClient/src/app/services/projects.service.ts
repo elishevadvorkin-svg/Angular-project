@@ -20,7 +20,7 @@ import { Project, CreateProjectRequest } from '../models';
 })
 export class ProjectsService {
   // כתובת ה-API בשרת
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = 'https://angular-project-4qdz.onrender.com/api';
 
   // Dependency Injection עם inject()
   private http = inject(HttpClient);

@@ -19,7 +19,7 @@ import { Team, CreateTeamRequest, AddMemberRequest } from '../models';
 })
 export class TeamsService {
   // כתובת ה-API בשרת
-  private apiUrl = 'http://localhost:3000/api/teams';
+  private apiUrl = 'https://angular-project-4qdz.onrender.com/api/teams';
 
   // Dependency Injection עם inject()
   private http = inject(HttpClient);
