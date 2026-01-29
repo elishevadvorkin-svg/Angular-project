@@ -12,7 +12,7 @@ router.post('/', createTeam);
 
 router.post('/:teamId/members', addMember);
 
-router.get('/:teamId/members', listTeamMembers);
+router.get('/:teamId/members', listTeamsMembers);
 
 router.delete('/:teamId/members/:userId', removeMember);
 
