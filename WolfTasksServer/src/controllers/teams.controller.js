@@ -1,6 +1,22 @@
 import db from '../db.js';
 
 export function listTeamsMembers(req, res) {
+  const { teamId } = req.params;
+  
+  // אם יש teamId - מחזיר חברי צוות
+  if (teamId) {
+    const members = db
+      .prepare(
+        `SELECT u.id, u.name, u.email
+         FROM users u
+         JOIN team_members tm ON tm.user_id = u.id
+         WHERE tm.team_id = ?`
+      )
+      .all(teamId);
+    return res.json(members);
+  }
+  
+  // אחרת - מחזיר רשימת צוותים
   const teams = db
     .prepare(
       `SELECT t.*, (
