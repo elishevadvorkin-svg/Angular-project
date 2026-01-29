@@ -1,6 +1,6 @@
 # Team Tasks API – Full Reference
 
-Base URL (local): http://localhost:3000
+Base URL (local): https://angular-project-4qdz.onrender.com
 
 Auth
 - All endpoints under /api (except /api/auth/* and /health) require Authorization: Bearer <token>.
@@ -85,17 +85,17 @@ Common Headers
 
 cURL examples
 - Register
-  curl -s -X POST http://localhost:3000/api/auth/register \
+  curl -s -X POST https://angular-project-4qdz.onrender.com/api/auth/register \
     -H "Content-Type: application/json" \
     -d '{"name":"Alice","email":"alice@example.com","password":"Password1!"}'
 
 - Login
-  curl -s -X POST http://localhost:3000/api/auth/login \
+  curl -s -X POST https://angular-project-4qdz.onrender.com/api/auth/login \
     -H "Content-Type: application/json" \
     -d '{"email":"alice@example.com","password":"Password1!"}'
 
 - Create Team
-  curl -s -X POST http://localhost:3000/api/teams \
+  curl -s -X POST https://angular-project-4qdz.onrender.com/api/teams \
     -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" \
     -d '{"name":"Core Team"}'
 

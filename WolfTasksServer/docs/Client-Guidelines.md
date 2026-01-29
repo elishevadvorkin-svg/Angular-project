@@ -41,7 +41,7 @@
 
 ## דרישות לא-פונקציונליות
 - מבנה פרויקט קריא, קבצים/תיקיות מאורגנים (components/pages/services).
-- שימוש ב‑.env לקביעת BASE_URL (למשל http://localhost:3000 או דומיין Render).
+- שימוש ב‑.env לקביעת BASE_URL (למשל https://angular-project-4qdz.onrender.com או דומיין Render).
 - טיפול בשגיאות HTTP: 401 (הפניה ל‑Login), 403 (הודעת הרשאה), 404/500 (הודעות מתאימות).
 - נגישות בסיסית: aria-labels לכפתורים/שדות.
 
@@ -73,7 +73,7 @@
 ## תצורת סביבה (דוגמה)
 - קובץ `.env` בצד הקליינט (Angular):
   - `NG_APP_API_BASE_URL` (או שימוש ב‑environment.ts):
-    - לוקאל: `http://localhost:3000`
+    - לוקאל: `https://angular-project-4qdz.onrender.com`
     - Render: `https://<your-service>.onrender.com`
 
 ## זרימות עיקריות (User Journeys)

@@ -25,7 +25,7 @@ cp .env.example .env
 npm install
 npm run seed  # optional demo data
 npm start
-# open http://localhost:3000/health
+# open https://angular-project-4qdz.onrender.com/health
 ```
 
 ## Deploy to Render

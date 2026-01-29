@@ -202,7 +202,7 @@
     }
   ],
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "baseUrl", "value": "https://angular-project-4qdz.onrender.com" },
     { "key": "token", "value": "" }
   ]
 }
