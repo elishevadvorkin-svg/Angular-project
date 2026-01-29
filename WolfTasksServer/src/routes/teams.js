@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { createTeam, addMember, deleteTeam, listTeamMembers, removeMember, listTeamsMembers } from '../controllers/teams.controller.js';
+import { createTeam, addMember, deleteTeam,  removeMember, listTeamsMembers } from '../controllers/teams.controller.js';
 
 const router = Router();
 
