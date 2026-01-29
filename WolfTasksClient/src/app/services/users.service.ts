@@ -20,7 +20,7 @@ export interface User {
   providedIn: 'root'
 })
 export class UsersService {
-  private apiUrl = 'https://angular-project-4qdz.onrender.com/api/users';
+  private apiUrl = 'https://wolf-tasks-api.onrender.com/api/users';
   private http = inject(HttpClient);
 
   /**

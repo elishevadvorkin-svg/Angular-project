@@ -18,7 +18,7 @@ import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models';
 })
 export class AuthService {
   // כתובת ה-API של השרת
-  private apiUrl = 'https://angular-project-4qdz.onrender.com/api/auth';
+  private apiUrl = 'https://wolf-tasks-api.onrender.com/api/auth';
 
   // Dependency Injection עם inject()
   private http = inject(HttpClient);

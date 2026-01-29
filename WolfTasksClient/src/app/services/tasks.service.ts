@@ -21,7 +21,7 @@ import { Task, CreateTaskRequest, UpdateTaskRequest, TaskStatus, TaskPriority } 
 })
 export class TasksService {
   // כתובת ה-API בשרת
-  private apiUrl = 'https://angular-project-4qdz.onrender.com/api';
+  private apiUrl = 'https://wolf-tasks-api.onrender.com/api';
 
   // Dependency Injection עם inject()
   private http = inject(HttpClient);
